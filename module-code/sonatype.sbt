@@ -16,7 +16,7 @@ pomExtra := <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
   </licenses>
   <scm>
     <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
-    <connection>scm:git:git@github.com:edulify/play-hikaricp.edulify.com.git</connection>
+    <connection>scm:git:git@github.com:giabao/play-hikaricp.edulify.com.git</connection>
     <developerConnection>scm:git:https://github.com/giabao/play-hikaricp.edulify.com.git</developerConnection>
   </scm>
   <developers>
