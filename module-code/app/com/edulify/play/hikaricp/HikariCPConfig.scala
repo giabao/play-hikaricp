@@ -140,7 +140,7 @@ object HikariCPConfig {
     }
 
     def setPropertyFromConfig(poolStr: String, playStr: String, required: Boolean = false): Unit = {
-      var prop = config.getString(playStr)
+      val prop = config.getString(playStr)
       if (prop.nonEmpty) {
         setProperty(poolStr, prop.get)
       } else if(playRequired contains playStr) {

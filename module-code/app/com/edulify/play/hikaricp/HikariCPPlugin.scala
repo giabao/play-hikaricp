@@ -26,7 +26,7 @@ class HikariCPPlugin(app: Application) extends DBPlugin {
 
   lazy val databaseConfig = app.configuration.getConfig("db").getOrElse(Configuration.empty)
 
-  override def enabled = !app.configuration.getString("hikari.enabled").exists(_ == "false")
+  override def enabled = !app.configuration.getString("hikari.enabled").contains("false")
 
 
   private lazy val hikariCPDBApi: DBApi = new HikariCPDBApi(databaseConfig, app.classloader)
@@ -43,9 +43,8 @@ class HikariCPPlugin(app: Application) extends DBPlugin {
             case mode => Logger.info("database [" + ds._2 + "] connected at " + dbURL(ds._1.getConnection))
           }
         } catch {
-          case NonFatal(e) => {
+          case NonFatal(e) =>
             throw databaseConfig.reportError(ds._2 + ".url", "Cannot connect to database [" + ds._2 + "]", Some(e.getCause))
-          }
         }
     }
   }
