@@ -18,12 +18,10 @@ package com.edulify.play.hikaricp
 import com.zaxxer.hikari.HikariConfig
 import play.api.{Configuration, Logger}
 
-import java.io.File
+import java.io._
 import java.util.Properties
 
 import scala.collection.JavaConversions._
-
-import org.apache.commons.configuration.{PropertiesConfiguration, ConfigurationConverter}
 
 object HikariCPConfig {
   lazy val DEFAULT_DATASOURCE_NAME = "default"
@@ -31,7 +29,7 @@ object HikariCPConfig {
 
   def getHikariConfig(dbConfig: Configuration) = {
     val file = new File(HIKARI_CP_PROPERTIES_FILE)
-    if(file.exists()) new HikariConfig(HikariCPConfig.props(file))
+    if(file.exists()) new HikariConfig(props(file))
     else new HikariConfig(HikariCPConfig.mapFromPlayConfiguration(dbConfig))
   }
 
@@ -42,10 +40,17 @@ object HikariCPConfig {
 
     Logger.info("Loading Hikari configuration from " + file)
 
-    val properties = ConfigurationConverter.getProperties(new PropertiesConfiguration(file))
+    val properties = loadProperties(file)
 
     logProperties(properties)
     properties
+  }
+
+  private def loadProperties(file: File): Properties = {
+    val props = new Properties()
+    val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))
+    try { props.load(reader) } finally { reader.close() }
+    props
   }
 
   private def mapFromPlayConfiguration(dbConfig: Configuration): Properties = {
