@@ -25,7 +25,7 @@ class HikariCPPlugin(app: Application) extends DBPlugin {
   lazy val dbConfig = app.configuration.getConfig("db").getOrElse(Configuration.empty)
 
   /** plugin is disabled if either configuration is missing or the plugin is explicitly disabled */
-  private lazy val isDisabled = app.configuration.getString("hikari.enabled").contains("false") || dbConfig.subKeys.isEmpty
+  private lazy val isDisabled = app.configuration.getString("hikari.enabled").exists(_ == "false") || dbConfig.subKeys.isEmpty
   override def enabled = ! isDisabled
 
   // should be accessed in onStart first
