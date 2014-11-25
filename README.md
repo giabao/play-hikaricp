@@ -1,15 +1,15 @@
 # HikariCP Plugin for 2.3.x
 
-This plugin works with `2.3.x` of PlayFramework. It uses version `2.2.4` of HikariCP.
+This plugin works with `2.3.x` of [PlayFramework](https://github.com/playframework/playframework). It uses version `2.2.5` of [HikariCP](https://github.com/brettwooldridge/HikariCP).
 
 Note, it can be made to work with Play `2.2.x` of the PlayFramework, but it requires changing the dependencies as
 the current build relies on the Play `2.3.x` plugin.
 
-[![Build Status](https://travis-ci.org/edulify/play-hikaricp.edulify.com.svg?branch=master)](https://travis-ci.org/edulify/play-hikaricp.edulify.com)
+[![Build Status](https://travis-ci.org/giabao/play-hikaricp.svg?branch=com.sandinh)](https://travis-ci.org/giabao/play-hikaricp)
 
 ## Why HikariCP?
 
-[HikariCP](https://github.com/brettwooldridge/HikariCP) is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability. After suffering with connection leaks from BoneCP, we decide to implement our own database plugin to replace the default one. You can see [a discussion about database exceptions](https://groups.google.com/forum/#!topic/play-framework/7PBnjiXkNuU) caused by BoneCP (or misconfiguration of it). Also there are numerous other discussions about people having problems related to BoneCP.
+HikariCP is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability. After suffering with connection leaks from BoneCP, we decide to implement our own database plugin to replace the default one. You can see [a discussion about database exceptions](https://groups.google.com/forum/#!topic/play-framework/7PBnjiXkNuU) caused by BoneCP (or misconfiguration of it). Also there are numerous other discussions about people having problems related to BoneCP.
 
 Here is how HikariCP is working for us:
 
@@ -19,6 +19,9 @@ Here is how HikariCP is working for us:
 
 | Version | HikariCP | Play  | Comment                          |
 |--------:|---------:|------:|:---------------------------------|
+| 1.7.0   | 2.2.5    | 2.3.6 | + remove deps: commons-configuration, commons-collections |
+|         |          |       | + add play.plugins & add config `dbplugin=disabled` to reference.conf |
+|         |          |       | + update HikariCP-java6 2.2.5 |
 | 1.6.0   | 2.2.4    | 2.3.6 | Updates HikariCP, Scala 2.11.4 and Play |
 | 1.5.0   | 2.0.1    | 2.3.4 | Code cleanup and fail fast in case of misconfiguration |
 | 1.4.1   | 2.0.1    | 2.3.2 | Updates HikariCP, Scala and Play |
@@ -30,7 +33,7 @@ Here is how HikariCP is working for us:
 | 1.0.0   | 1.3.5    | 2.2.2 | First stable release             |
 
 ## Repository
-maven center
+[com.sandinh:play-hikaricp](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.sandinh%22%20play-hikaricp)  from maven center
 
 ## How to Use
 
@@ -40,9 +43,9 @@ There are just a few steps to properly configure the plugin. Just follow the ste
 
 Add the following dependency to your `project/build.sbt` or `project/Build.scala`:
 
-    "com.edulify" %% "play-hikaricp" % "1.6.0"
-
-### Step 2: Disable default `dbplugin`
+    "com.sandinh" %% "play-hikaricp" % "1.7.0"
+    
+### Step 2: ~~Disable default `dbplugin`~~ don't need from v1.7.0
 
 Add the following line to your `conf/application.conf`:
 
@@ -50,7 +53,7 @@ Add the following line to your `conf/application.conf`:
 
 This will disable dbplugin and avoids that BoneCP creates useless connections (which in some cases can create database problems, like exhaust available connections).
 
-### Step 3: Enable HikariCP Plugin
+### Step 3: ~~Enable HikariCP Plugin~~ don't need from v1.7.0
 
 Add the following line to your `conf/play.plugins`:
 
@@ -156,3 +159,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+d
