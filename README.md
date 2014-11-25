@@ -19,6 +19,8 @@ Here is how HikariCP is working for us:
 
 | Version | HikariCP | Play  | Comment                          |
 |--------:|---------:|------:|:---------------------------------|
+| 1.7.1   | 2.2.5    | 2.3.6 | + crossCompile to scala 2.10.4 & 2.11.4 |
+|         |          |       | + disable HikariCPPlugin if db configuration is missing (or the plugin is explicitly disabled) |
 | 1.7.0   | 2.2.5    | 2.3.6 | + remove deps: commons-configuration, commons-collections |
 |         |          |       | + add play.plugins & add config `dbplugin=disabled` to reference.conf |
 |         |          |       | + update HikariCP-java6 2.2.5 |
@@ -43,7 +45,7 @@ There are just a few steps to properly configure the plugin. Just follow the ste
 
 Add the following dependency to your `project/build.sbt` or `project/Build.scala`:
 
-    "com.sandinh" %% "play-hikaricp" % "1.7.0"
+    "com.sandinh" %% "play-hikaricp" % "1.7.1"
     
 ### Step 2: ~~Disable default `dbplugin`~~ don't need from v1.7.0
 
