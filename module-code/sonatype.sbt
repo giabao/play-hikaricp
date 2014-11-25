@@ -6,7 +6,7 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra := <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
+pomExtra := <url>https://github.com/giabao/play-hikaricp</url>
   <licenses>
     <license>
       <name>Apache 2</name>
@@ -15,9 +15,9 @@ pomExtra := <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
     </license>
   </licenses>
   <scm>
-    <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
-    <connection>scm:git:git@github.com:giabao/play-hikaricp.edulify.com.git</connection>
-    <developerConnection>scm:git:https://github.com/giabao/play-hikaricp.edulify.com.git</developerConnection>
+    <url>https://github.com/giabao/play-hikaricp</url>
+    <connection>scm:git:git@github.com:giabao/play-hikaricp.git</connection>
+    <developerConnection>scm:git:https://github.com/giabao/play-hikaricp.git</developerConnection>
   </scm>
   <developers>
     <developer>
@@ -25,5 +25,12 @@ pomExtra := <url>https://github.com/giabao/play-hikaricp.edulify.com</url>
       <name>Megazord</name>
       <email>contact [at] edulify.com</email>
       <url>https://github.com/megazord</url>
+    </developer>
+    <developer>
+      <id>giabao</id>
+      <name>Gia Bảo</name>
+      <email>giabao@sandinh.net</email>
+      <organization>Sân Đình</organization>
+      <organizationUrl>http://sandinh.com</organizationUrl>
     </developer>
   </developers>

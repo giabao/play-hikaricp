@@ -16,26 +16,26 @@
 package com.edulify.play.hikaricp
 
 import java.sql.Connection
-
 import play.api.db.{DBApi, DBPlugin}
 import play.api.{Application, Configuration, Mode, Logger}
-
 import scala.util.control.NonFatal
 
 class HikariCPPlugin(app: Application) extends DBPlugin {
 
-  lazy val databaseConfig = app.configuration.getConfig("db").getOrElse(Configuration.empty)
+  lazy val dbConfig = app.configuration.getConfig("db").getOrElse(Configuration.empty)
 
-  override def enabled = !app.configuration.getString("hikari.enabled").contains("false")
+  /** plugin is disabled if either configuration is missing or the plugin is explicitly disabled */
+  private lazy val isDisabled = app.configuration.getString("hikari.enabled").contains("false") || dbConfig.subKeys.isEmpty
+  override def enabled = ! isDisabled
 
+  // should be accessed in onStart first
+  private lazy val dbApi: DBApi = new HikariCPDBApi(dbConfig, app.classloader)
 
-  private lazy val hikariCPDBApi: DBApi = new HikariCPDBApi(databaseConfig, app.classloader)
-
-  def api: DBApi = hikariCPDBApi
+  def api: DBApi = dbApi
 
   override def onStart() {
     play.api.Logger.info("Starting HikariCP connection pool...")
-    hikariCPDBApi.datasources.map { ds =>
+    dbApi.datasources.map { ds =>
         try {
           ds._1.getConnection.close()
           app.mode match {
@@ -44,16 +44,16 @@ class HikariCPPlugin(app: Application) extends DBPlugin {
           }
         } catch {
           case NonFatal(e) =>
-            throw databaseConfig.reportError(ds._2 + ".url", "Cannot connect to database [" + ds._2 + "]", Some(e.getCause))
+            throw dbConfig.reportError(ds._2 + ".url", "Cannot connect to database [" + ds._2 + "]", Some(e.getCause))
         }
     }
   }
 
   override def onStop() {
     play.api.Logger.info("Stoping HikariCP connection pool...")
-    hikariCPDBApi.datasources.foreach {
+    dbApi.datasources.foreach {
       case (ds, _) => try {
-        hikariCPDBApi.shutdownPool(ds)
+        dbApi.shutdownPool(ds)
       } catch {
         case t: Throwable =>
       }
