@@ -19,6 +19,9 @@ Here is how HikariCP is working for us:
 
 | Version | HikariCP | Play  | Comment                          |
 |--------:|---------:|------:|:---------------------------------|
+| 1.7.2   | 2.2.5    | 2.3.7 | + update scala 2.11.5 |
+|         |          |       | + fixes HikariCPConfig.idleTimeout |
+|         |          |       | + only set property from play config if the play config value is defined |
 | 1.7.1   | 2.2.5    | 2.3.6 | + crossCompile to scala 2.10.4 & 2.11.4 |
 |         |          |       | + disable HikariCPPlugin if db configuration is missing (or the plugin is explicitly disabled) |
 | 1.7.0   | 2.2.5    | 2.3.6 | + remove deps: commons-configuration, commons-collections |
@@ -90,19 +93,19 @@ Hikari                                          | Play                          
 `username`                                      | `db.default.user`              | * Must be provided
 `password`                                      | `db.default.password`          | * Must be provided
  -                                              | `db.default.partitionSize`     | * Unused/NA
-`maximumPoolSize` (partitionSize * maxPoolSize) | `db.default.maxPoolSize`       | 30
-`minimumPoolSize` (partitionSize * minPoolSize) | `db.default.minPoolSize`       | 5
-`maxLifetime`                                   | `db.default.maxConnectionAge`  | 30 min.
-`idleTimeout`                                   | `db.default.idleMaxAge`<br>`db.default.idleMaxAgeInMinutes`<br>`db.default.idleMaxAgeInSeconds`        | 10 min.
-`connectionTimeout`                             | `db.default.connectionTimeout`<br>`db.default.connectionTimeoutInMs`   | 30 sec.
-`leakDetectionThreshold`                        | `db.default.closeConnectionWatchTimeout`<br>`db.default.closeConnectionWatchTimeoutInMs`    | 0 ms
+`maximumPoolSize` (partitionSize * maxPoolSize) | `db.default.maxPoolSize`       |
+`minimumPoolSize` (partitionSize * minPoolSize) | `db.default.minPoolSize`       |
+`maxLifetime`                                   | `db.default.maxConnectionAge`  |
+`idleTimeout`                                   | `db.default.idleMaxAge`<br>`db.default.idleMaxAgeInMinutes`<br>`db.default.idleMaxAgeInSeconds`        |
+`connectionTimeout`                             | `db.default.connectionTimeout`<br>`db.default.connectionTimeoutInMs`   |
+`leakDetectionThreshold`                        | `db.default.closeConnectionWatchTimeout`<br>`db.default.closeConnectionWatchTimeoutInMs`    |
 `connectionInitSql`                             | `db.default.initSQL`           | -
 `connectionTestQuery`                           | `db.default.connectionTestStatement`           | -
-`autoCommit`                                    | `db.default.defaultAutoCommit` | `true`
+`autoCommit`                                    | `db.default.defaultAutoCommit` |
 `transactionIsolation`                          | `db.default.defaultTransactionIsolation`  | -
-`readOnly`                                      | `db.default.defaultReadOnly`   | `false`
+`readOnly`                                      | `db.default.defaultReadOnly`   |
 `catalog`                                       | `db.default.defaultCatalog   ` | -
-`registerMbeans`                                | `db.default.statisticsEnabled` | `false`
+`registerMbeans`                                | `db.default.statisticsEnabled` |
 
 ## JNDI Support
 
@@ -148,6 +151,8 @@ There are also two other alternatives using c3p0:
 
 ## License
 
+Copyright 2015 sandinh.com
+
 Copyright 2014 Edulify.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -161,4 +166,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-d

@@ -2,16 +2,15 @@ organization := "com.sandinh"
 
 name := "play-hikaricp"
 
-version := "1.7.1"
+version := "1.7.2"
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
-crossScalaVersions := Seq("2.10.4", "2.11.4")
+crossScalaVersions := Seq("2.10.5", "2.11.4")
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+enablePlugins(PlayScala)
 
-libraryDependencies ++= Seq(
-  jdbc,
+libraryDependencies ++= Seq(jdbc,
   "com.zaxxer" % "HikariCP-java6" % "2.2.5"
 )
 

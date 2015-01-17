@@ -30,7 +30,7 @@ object HikariCPConfig {
   def getHikariConfig(dbConfig: Configuration) = {
     val file = new File(HIKARI_CP_PROPERTIES_FILE)
     if(file.exists()) new HikariConfig(props(file))
-    else new HikariConfig(HikariCPConfig.mapFromPlayConfiguration(dbConfig))
+    else new HikariConfig(mapFromPlayConfiguration(dbConfig))
   }
 
   private def props(file: File): Properties = {
@@ -38,19 +38,16 @@ object HikariCPConfig {
       throw new IllegalStateException(s"Hikari configuration file ${file.getAbsolutePath} doesn't exist.")
     }
 
-    Logger.info("Loading Hikari configuration from " + file)
+    def load(): Properties = {
+      Logger.info("Loading Hikari configuration from " + file)
 
-    val properties = loadProperties(file)
+      val props = new Properties()
+      val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))
+      try { props.load(reader) } finally { reader.close() }
+      props
+    }
 
-    logProperties(properties)
-    properties
-  }
-
-  private def loadProperties(file: File): Properties = {
-    val props = new Properties()
-    val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))
-    try { props.load(reader) } finally { reader.close() }
-    props
+    logProperties(load())
   }
 
   private def mapFromPlayConfiguration(dbConfig: Configuration): Properties = {
@@ -62,95 +59,72 @@ object HikariCPConfig {
       return props(new File(configFile.get))
     }
 
-    val properties = new ConfigProperties(dbConfig)
-    properties.setPropertyFromConfig("driverClassName", "driver")
-    properties.setPropertyFromConfig("jdbcUrl",         "url")
-    properties.setPropertyFromConfig("username",        "user")
-    properties.setPropertyFromConfig("password",        "password")
-
-    properties.setProperty("maximumPoolSize",        maxPoolSize(dbConfig))
-    properties.setProperty("minimumIdle",            minPoolSize(dbConfig))
-    properties.setProperty("maxLifetime",            maxLifetime(dbConfig))
-    properties.setProperty("idleTimeout",            idleTimeout(dbConfig))
-    properties.setProperty("connectionTimeout",      connectionTimeout(dbConfig))
-    properties.setProperty("leakDetectionThreshold", leakDetectionThreshold(dbConfig))
-
-    properties.setPropertyFromConfig("catalog",             "defaultCatalog")
-    properties.setPropertyFromConfig("autoCommit",          "defaultAutoCommit", "true")
-    properties.setPropertyFromConfig("connectionTestQuery", "connectionTestStatement")
-    properties.setProperty("jdbc4ConnectionTest", (properties.getProperty("connectionTestQuery") == null).toString)
-    properties.setPropertyFromConfig("transactionIsolation", "defaultTransactionIsolation")
-    properties.setPropertyFromConfig("readOnly",             "defaultReadOnly", "false")
-
-    properties.setPropertyFromConfig("registerMbeans",       "statisticsEnabled", "false")
-    properties.setPropertyFromConfig("connectionInitSql",    "initSQL")
-
-    logProperties(properties)
-    properties
+    logProperties(new ConfigProperties(dbConfig))
   }
 
-  private def logProperties(properties: Properties): Unit = {
-    // Log the properties that are used, but don't print out the raw password for security-sake
+  /** Log the properties that are used, but don't print out the raw password for security-sake */
+  private def logProperties(properties: Properties): Properties = {
     Logger.info("Properties: " + properties.map { case (name: String, value: String) =>
       if (name contains "password") {
         "%s=%.1s%s" format(name, value, value.substring(value.length).padTo(value.length - 1, "*").mkString)
       } else "%s=%s" format(name, value)
     }.mkString(", "))
+    properties
   }
 
-  private def maxPoolSize(config: Configuration) = {
-    val partitionCount = config.getInt("partitionCount").getOrElse(1)
-    val maxConnectionsPerPartition = config.getInt("maxConnectionsPerPartition").getOrElse(30)
-    (partitionCount * maxConnectionsPerPartition).toString
-  }
-
-  private def minPoolSize(config: Configuration) = {
-    val partitionCount = config.getInt("partitionCount").getOrElse(1)
-    val maxConnectionsPerPartition = config.getInt("minConnectionsPerPartition").getOrElse(5)
-    (partitionCount * maxConnectionsPerPartition).toString
-  }
-
-  private def maxLifetime(config: Configuration) = {
-    var maxLife = config.getLong("maxConnectionAgeInMinutes").getOrElse(30L)
-    maxLife     = config.getLong("maxConnectionAgeInSeconds").getOrElse(maxLife * 60)
-    maxLife     = config.getMilliseconds("maxConnectionAge").getOrElse(maxLife * 1000)
-    maxLife.toString
-  }
-
-  private def idleTimeout(config: Configuration) = {
-    var idleMaxAge = config.getLong("idleMaxAgeInMinutes").getOrElse(10L)
-    idleMaxAge     = config.getLong("idleMaxAgeInSeconds").getOrElse(idleMaxAge) * 60
-    idleMaxAge     = config.getMilliseconds("idleMaxAge").getOrElse(idleMaxAge) * 1000
-    idleMaxAge.toString
-  }
-
-  private def connectionTimeout(config: Configuration) = {
-    var timeout = config.getLong("connectionTimeoutInMs").getOrElse(30 * 1000L)
-    timeout     = config.getMilliseconds("connectionTimeout").getOrElse(timeout)
-    timeout.toString
-  }
-
-  private def leakDetectionThreshold(config: Configuration) = {
-    var threshold = config.getLong("closeConnectionWatchTimeoutInMs").getOrElse(0)
-    threshold     = config.getMilliseconds("closeConnectionWatchTimeout").getOrElse(threshold)
-    threshold.toString
+  private object ConfigProperties {
+    implicit class LongOptionOps(val o: Option[Long]) extends AnyVal {
+      def *(x: Long): Option[Long] = o.map(_ * x)
+    }
+    /** Keep track of the required fields which if not set cause the startup to fail */
+    private val playRequired = Set("driver", "url", "user", "password")
   }
 
   private class ConfigProperties(config: Configuration) extends Properties {
-    // Keep track of the required fields which if not set cause the startup to fail
-    val playRequired : Set[String] = Set("driver", "url", "user", "password")
+    import ConfigProperties._
 
-    def setPropertyFromConfig(poolStr: String, playStr: String, default: String): Unit = {
-      setProperty(poolStr, config.getString(playStr).getOrElse(default))
+    private def set(key: String, playKey: String): Unit = config.getString(playKey).foreach(setProperty(key, _))
+    private def set(key: String, o: Option[Long]): Unit = o.foreach(v => setProperty(key, v.toString))
+
+    playRequired
+      .find(config.getString(_).isEmpty)
+      .foreach(key => throw config.reportError("Play Config", s"Required property not found: '$key'"))
+
+    set("driverClassName", "driver")
+    set("jdbcUrl",         "url")
+    set("username",        "user")
+    set("password",        "password")
+
+    set("autoCommit", "defaultAutoCommit")
+
+    set("connectionTimeout", config.getMilliseconds("connectionTimeout")
+      .orElse(config.getLong("connectionTimeoutInMs")))
+
+    set("idleTimeout", config.getMilliseconds("idleMaxAge")
+      .orElse(config.getLong("idleMaxAgeInSeconds") * 1000)
+      .orElse(config.getLong("idleMaxAgeInMinutes") * 60000))
+
+    set("maxLifetime", config.getMilliseconds("maxConnectionAge")
+      .orElse(config.getLong("maxConnectionAgeInSeconds") * 1000)
+      .orElse(config.getLong("maxConnectionAgeInMinutes") * 60000))
+
+    //If your driver supports JDBC4 we strongly recommend not setting this property
+    set("connectionTestQuery", "connectionTestStatement")
+
+    {
+      val partitionCount = config.getLong("partitionCount").getOrElse(1L)
+      set("minimumIdle", config.getInt("minConnectionsPerPartition").map(_ * partitionCount))
+      set("maximumPoolSize", config.getInt("maxConnectionsPerPartition").map(_ * partitionCount))
     }
 
-    def setPropertyFromConfig(poolStr: String, playStr: String, required: Boolean = false): Unit = {
-      val prop = config.getString(playStr)
-      if (prop.nonEmpty) {
-        setProperty(poolStr, prop.get)
-      } else if(playRequired contains playStr) {
-        throw config.reportError("Play Config", "Required property not found: '" + playStr + "'")
-      }
-    }
+    set("leakDetectionThreshold", config.getLong("closeConnectionWatchTimeoutInMs")
+      .orElse(config.getMilliseconds("closeConnectionWatchTimeout")))
+
+    set("catalog",             "defaultCatalog")
+    set("transactionIsolation", "defaultTransactionIsolation")
+    set("readOnly",             "defaultReadOnly")
+
+    set("registerMbeans",       "statisticsEnabled")
+    set("connectionInitSql",    "initSQL")
   }
 }
